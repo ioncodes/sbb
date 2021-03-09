@@ -77,7 +77,7 @@ fn parse_location(connection: &JsonValue, subfield: &str) -> (String, String, St
     (arrival, departure, platform, station_name)
 }
 
-fn parse_date(date: &str) -> DateTime::<FixedOffset> {
+fn parse_date(date: &str) -> DateTime<FixedOffset> {
     DateTime::parse_from_str(&date, "%Y-%m-%dT%H:%M:%S%z").unwrap()
 }
 
