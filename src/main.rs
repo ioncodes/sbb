@@ -23,11 +23,13 @@ fn get_args() -> (String, String, i32) {
         .arg(Arg::with_name("from")
             .short("f")
             .long("from")
+            .required(true)
             .takes_value(true)
             .help("From"))
         .arg(Arg::with_name("to")
             .short("t")
             .long("to")
+            .required(true)
             .takes_value(true)
             .help("To"))
         .arg(Arg::with_name("number")
@@ -35,6 +37,11 @@ fn get_args() -> (String, String, i32) {
             .long("number")
             .takes_value(true)
             .help("The number/amount of connections to fetch"))
+        .arg(Arg::with_name("via")
+            .short("v")
+            .long("via")
+            .takes_value(true)
+            .help("Via"))
         .get_matches();
 
     let from = matches.value_of("from").unwrap();
