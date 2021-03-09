@@ -6,7 +6,7 @@ extern crate serde_json;
 
 mod connection;
 
-use chrono::{DateTime, Duration, FixedOffset};
+use chrono::{DateTime, Duration, FixedOffset, NaiveTime};
 use serde_json::Value as JsonValue;
 use connection::Connection;
 use prettytable::Table;
@@ -74,9 +74,17 @@ fn parse_date(date: &str) -> DateTime::<FixedOffset> {
     DateTime::parse_from_str(&date, "%Y-%m-%dT%H:%M:%S%z").unwrap()
 }
 
-fn print_table(connections: &Vec<Connection>) {
-    let mut table = Table::new();
+fn get_range(connections: &Vec<Connection>) -> (NaiveTime, NaiveTime) {
+    let start = connections.first().unwrap().departure_date;
+    let end = connections.last().unwrap().arrival_date;
 
+    (start, end)
+}
+
+fn print_table(connections: &Vec<Connection>) {
+    let (start, end) = get_range(&connections);
+
+    let mut table = Table::new();
     table.add_row(row![b->"From", b->"Departure", b->"To", b->"Arrival", b->"Platform", b->"Duration"]);
 
     for connection in connections {
@@ -91,6 +99,7 @@ fn print_table(connections: &Vec<Connection>) {
             duration_fmt]);
     }
 
+    println!("=== {} -> {} ===", start, end);
     table.printstd();
 }
 
@@ -106,8 +115,8 @@ fn main() {
         let sections = connection.get("sections").unwrap().as_array().unwrap();
 
         for section in sections {
-            let (arrival, _, platform, station_name_arrival) = parse_location(&section, "arrival");
-            let (_, departure, _, station_name_departure) = parse_location(&section, "departure");
+            let (arrival, _, _, station_name_arrival) = parse_location(&section, "arrival");
+            let (_, departure, platform, station_name_departure) = parse_location(&section, "departure");
 
             let mut duration = Duration::zero();
             let mut arrival_date: Option<DateTime<FixedOffset>> = None;
