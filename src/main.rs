@@ -15,7 +15,7 @@ use clap::{Arg, App};
 const HOST: &str = "http://transport.opendata.ch/v1";
 const DEFAULT_PAGE: i32 = 0;
 
-fn get_args() -> (String, String, i32) {
+fn get_args() -> (String, String, i32, Option<String>) {
     let matches = App::new("sbb")
         .version("0.1.0")
         .author("Layle")
@@ -47,12 +47,17 @@ fn get_args() -> (String, String, i32) {
     let from = matches.value_of("from").unwrap();
     let to = matches.value_of("to").unwrap();
     let number = matches.value_of("number").unwrap_or("1").parse::<i32>().unwrap();
+    let via = matches.value_of("via");
 
-    (String::from(from), String::from(to), number)
+    (String::from(from), String::from(to), number, via.map(String::from))
 }
 
-fn get_connections(from: &String, to: &String, limit: i32) -> JsonValue {
-    let url = format!("{}/connections?from={}&to={}&page={}&limit={}", HOST, from, to, DEFAULT_PAGE, limit);
+fn get_connections(from: &String, to: &String, limit: i32, via: &Option<String>) -> JsonValue {
+    let mut url = format!("{}/connections?from={}&to={}&page={}&limit={}", HOST, from, to, DEFAULT_PAGE, limit);
+
+    if let Some(via_str) = via {
+        url = format!("{}&via={}", url, via_str);
+    }
 
     reqwest::blocking::get(&url)
         .unwrap()
@@ -111,8 +116,8 @@ fn print_table(connections: &Vec<Connection>) {
 }
 
 fn main() {
-    let (from, to, number) = get_args();
-    let response = get_connections(&from, &to, number);
+    let (from, to, number, via) = get_args();
+    let response = get_connections(&from, &to, number, &via);
     let connections = response.get("connections").unwrap().as_array().unwrap();
 
     //println!("{}", serde_json::to_string(&response).unwrap());
