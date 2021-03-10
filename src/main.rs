@@ -82,11 +82,11 @@ fn get_field_as_string(value: &JsonValue, field_name: &str) -> String {
 
 fn parse_location(connection: &JsonValue, subfield: &str) -> (String, String, String, String) {
     let field = connection.get(subfield).unwrap();
-    
+    let station = field.get("station").unwrap();
+
     let arrival = get_field_as_string(&field, "arrival");
     let departure = get_field_as_string(&field, "departure");
     let platform = get_field_as_string(&field, "platform");
-    let station = field.get("station").unwrap();
     let station_name = get_field_as_string(&station, "name");
     
     (arrival, departure, platform, station_name)
