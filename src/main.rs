@@ -15,7 +15,7 @@ use clap::{Arg, App};
 const HOST: &str = "http://transport.opendata.ch/v1";
 const DEFAULT_PAGE: i32 = 0;
 
-fn get_args() -> (String, String, i32, Option<String>) {
+fn get_args() -> (String, String, i32, Option<String>, Option<String>) {
     let matches = App::new("sbb")
         .version("0.1.0")
         .author("Layle")
@@ -42,21 +42,31 @@ fn get_args() -> (String, String, i32, Option<String>) {
             .long("via")
             .takes_value(true)
             .help("Via"))
+        .arg(Arg::with_name("time")
+            .short("T")
+            .long("time")
+            .takes_value(true)
+            .help("Time as <HH:mm>"))
         .get_matches();
 
     let from = matches.value_of("from").unwrap();
     let to = matches.value_of("to").unwrap();
     let number = matches.value_of("number").unwrap_or("1").parse::<i32>().unwrap();
     let via = matches.value_of("via");
+    let time = matches.value_of("time");
 
-    (String::from(from), String::from(to), number, via.map(String::from))
+    (String::from(from), String::from(to), number, via.map(String::from), time.map(String::from))
 }
 
-fn get_connections(from: &String, to: &String, limit: i32, via: &Option<String>) -> JsonValue {
+fn get_connections(from: &String, to: &String, limit: i32, via: &Option<String>, time: &Option<String>) -> JsonValue {
     let mut url = format!("{}/connections?from={}&to={}&page={}&limit={}", HOST, from, to, DEFAULT_PAGE, limit);
 
     if let Some(via_str) = via {
         url = format!("{}&via={}", url, via_str);
+    }
+
+    if let Some(time_str) = time {
+        url = format!("{}&time={}", url, time_str);
     }
 
     reqwest::blocking::get(&url)
@@ -111,13 +121,13 @@ fn print_table(connections: &Vec<Connection>) {
             duration_fmt]);
     }
 
-    println!("=== {} -> {} ===", start, end);
+    println!("=== {} -> {} ({}min) ===", start, end, end.signed_duration_since(start).num_minutes());
     table.printstd();
 }
 
 fn main() {
-    let (from, to, number, via) = get_args();
-    let response = get_connections(&from, &to, number, &via);
+    let (from, to, number, via, time) = get_args();
+    let response = get_connections(&from, &to, number, &via, &time);
     let connections = response.get("connections").unwrap().as_array().unwrap();
 
     //println!("{}", serde_json::to_string(&response).unwrap());
