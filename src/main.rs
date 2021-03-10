@@ -114,14 +114,16 @@ fn print_table(connections: &Vec<Connection>) {
 
         table.add_row(row![
             connection.departure_name,
-            connection.departure_date,
+            connection.departure_date.format("%H:%M"),
             connection.arrival_name,
-            connection.arrival_date,
+            connection.arrival_date.format("%H:%M"),
             connection.platform,
             duration_fmt]);
     }
 
-    println!("=== {} -> {} ({}min) ===", start, end, end.signed_duration_since(start).num_minutes());
+    println!("{} -> {} ({}min)", 
+        start.format("%H:%M"), end.format("%H:%M"), 
+        end.signed_duration_since(start).num_minutes());
     table.printstd();
 }
 
